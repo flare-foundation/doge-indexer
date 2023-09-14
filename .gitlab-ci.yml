@@ -1,0 +1,108 @@
+# templates
+ 
+.test_template: &test
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  image:
+    name: $CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH
+    entrypoint: [""]
+  only:
+    - branches
+
+.deploy_template: &deploy
+  stage: deploy
+  image: kroniak/ssh-client
+  script:
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+    - scp docker/remote/docker-compose.yaml $SSH_DEPLOY_HOST:~/app/docker-compose.yaml
+    - scp docker/remote/deploy.sh $SSH_DEPLOY_HOST:~/app/deploy.sh
+    - scp docker/remote/stop.sh $SSH_DEPLOY_HOST:~/app/stop.sh
+    - ssh $SSH_DEPLOY_HOST 'cd ~/app && ./deploy.sh'
+
+.stop_template: &stop
+  stage: deploy
+  when: manual
+  image: kroniak/ssh-client
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+    - ssh $SSH_DEPLOY_HOST 'cd ~/app && ./stop.sh'
+
+stages:
+  - build
+  - test
+  - deploy
+
+build_branches:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "$CI_COMMIT_SHA" > COMMIT_HASH
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/remote/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH --cache=true --cache-ttl=120h
+  only:
+    - branches
+
+build_tags:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "$CI_COMMIT_SHA" > COMMIT_HASH
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/remote/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG --cache=true --cache-ttl=120h
+  only:
+    - tags
+
+test_django:
+  <<: *test
+  script:
+    - cd /app
+    - python manage.py test --settings=project.settings.ci_testing
+  artifacts:
+    reports:
+      junit: testreport.xml
+
+test_black:
+  <<: *test
+  script:
+    - cd /app
+    - python -m black --check .
+
+test_ruff:
+  <<: *test
+  script:
+    - cd /app
+    - python -m ruff .
+
+deploy_develop:
+  <<: *deploy
+  environment:
+    name: develop
+    # url: DEPLOYMENT_URL, to be shown on gitlab
+    on_stop: stop_develop
+  only:
+    - develop
+
+stop_develop:
+  <<: *stop
+  environment:
+    name: develop
+    action: stop
+  only:
+    - develop

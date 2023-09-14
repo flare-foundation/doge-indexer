@@ -1,0 +1,14 @@
+-r common.txt
+
+# server
+uWSGI==2.0.21
+
+# Prometheus Monitoring
+prometheus-client==0.16.0
+django-prometheus==2.3.1
+
+# Sentry Monitoring
+sentry-sdk==1.22.2
+
+# Unittest Reporting
+unittest-xml-reporting==3.2.0
