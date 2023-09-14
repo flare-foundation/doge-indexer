@@ -88,9 +88,6 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     # dependencies
     "rest_framework",
-    "rest_framework.authtoken",
-    "rest_framework_simplejwt",
-    "rest_registration",
     "simple_history",
     "corsheaders",
     "drf_spectacular",
@@ -187,36 +184,8 @@ FRONTEND_URL = os.environ.get("FRONTEND_URL")
 
 # djangorestframework
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
+    # "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-}
-
-# djangorestframework-simplejwt
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=10),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": False,
-    "UPDATE_LAST_LOGIN": False,
-    "ALGORITHM": "HS256",
-    "SIGNING_KEY": SECRET_KEY,
-    "VERIFYING_KEY": None,
-    "AUDIENCE": None,
-    "ISSUER": None,
-    "JWK_URL": None,
-    "LEEWAY": 0,
-    "AUTH_HEADER_TYPES": ("Bearer",),
-    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
-    "USER_ID_FIELD": "id",
-    "USER_ID_CLAIM": "user_id",
-    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
-    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    "TOKEN_TYPE_CLAIM": "token_type",
-    "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
-    "JTI_CLAIM": "jti",
-    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
-    "SLIDING_TOKEN_LIFETIME": timedelta(hours=10),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
 # drf-spectacular
@@ -228,31 +197,6 @@ SPECTACULAR_SETTINGS = {
     "ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE": False,
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
-}
-
-# django-rest-registration
-REST_REGISTRATION = {
-    "REGISTER_EMAIL_VERIFICATION_URL": f"{FRONTEND_URL}/account/verify-email",
-    "REGISTER_OUTPUT_SERIALIZER_CLASS": "afauth.serializers.AFUserSerializer",
-    "REGISTER_PASSWORD_VERIFICATION_ONE_TIME_USE": True,
-    "REGISTER_SERIALIZER_CLASS": "afauth.serializers.RegisterAFUserSerializer",
-    "REGISTER_VERIFICATION_ONE_TIME_USE": True,
-    "REGISTER_VERIFICATION_PERIOD": timedelta(days=1),
-    "REGISTER_VERIFICATION_URL": f"{FRONTEND_URL}/account/verify-user",
-    "RESET_PASSWORD_VERIFICATION_URL": f"{FRONTEND_URL}/account/reset-password",
-    "VERIFICATION_FROM_EMAIL": DEFAULT_FROM_EMAIL,
-    "RESET_PASSWORD_VERIFICATION_PERIOD": timedelta(minutes=10),
-    # Uncomment these when email templates are added
-    # "REGISTER_VERIFICATION_EMAIL_TEMPLATES": {
-    #     "html_body": "rest_registration/register/body.html",
-    #     "text_body": "rest_registration/register/body.txt",
-    #     "subject": "rest_registration/register/subject.txt",
-    # },
-    # "RESET_PASSWORD_VERIFICATION_EMAIL_TEMPLATES": {
-    #     "html_body": "rest_registration/reset_password/body.html",
-    #     "text_body": "rest_registration/reset_password/body.txt",
-    #     "subject": "rest_registration/reset_password/subject.txt",
-    # },
 }
 
 # django-types

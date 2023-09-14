@@ -17,8 +17,6 @@ django-simple-history==3.3.0 # To store model history in admin
 # Django Rest Framework
 djangorestframework-types
 djangorestframework==3.14.0
-django-rest-registration==0.8.2
-djangorestframework-simplejwt==5.2.2 # For JSON Web Token authentication
 drf-spectacular==0.26.0 # To generate OpenAPI 3 schema for REST framework
 
 # Requerements Monitoring

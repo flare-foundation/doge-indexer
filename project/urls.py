@@ -36,11 +36,6 @@ urlpatterns = [
     path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ]
 
-# auth
-urlpatterns += [
-    path("api/auth/", include("afauth.urls")),
-]
-
 # v0 api
 urlpatterns += []
 

@@ -116,34 +116,3 @@ class AFUser(AbstractUser):
 
     def get_full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
-
-
-@receiver(models.signals.pre_save, sender=AFUser)
-def detect_password_change(sender, instance: AFUser, **kwargs):
-    """
-    Checks if the user changed his password
-    """
-    if instance._password is None:
-        return
-
-    try:
-        _ = AFUser.objects.get(id=instance.id)
-    except AFUser.DoesNotExist:
-        return
-
-    # if you get here, the user changed his password
-
-    # subject cant contain newlines
-    subject = "".join(loader.render_to_string("password_changed/subject.txt").splitlines())
-    html_content = loader.render_to_string("password_changed/body.html")
-    text_content = loader.render_to_string("password_changed/body.txt")
-
-    message = mail.EmailMultiAlternatives(
-        subject=subject,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[instance.email],
-        body=text_content,
-    )
-    message.attach_alternative(html_content, "text/html")
-
-    message.send()
