@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     # our apps
     "afauth.apps.AfauthConfig",
+    "doge_indexer.apps.DogeIndexerConfig",
 ]
 
 LANGUAGE_CODE = "en-us"

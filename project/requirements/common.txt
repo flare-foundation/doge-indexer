@@ -22,3 +22,6 @@ drf-spectacular==0.26.0 # To generate OpenAPI 3 schema for REST framework
 # Requerements Monitoring
 pip-requirements-parser==32.0.1
 types-setuptools
+
+# Other
+requests==2.31.0
