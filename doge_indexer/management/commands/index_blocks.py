@@ -182,11 +182,12 @@ def new_session(config: ClientInitConfig):
 blocks = [
     "6f1456dc45b7d42bd84234844769e15616c6f68e698f74e41a8ced40e258563e", # 823 tx,
     "25af14c0f0d4bc7da615c0c312da2cbfe9e512c38652c4d8beca675852ec9f7d", # semi new 
+    "37bc436b81b813d84c2cab54c7f1b8fbd162942f49c14df0b4afe462cd2ce0bd", # 9 tx 10inputs 16 outputs 
 ]
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
         workers = [new_session(client_config) for _ in range(NUMBER_OF_WORKERS)]
 
-        process_block(workers, "6f1456dc45b7d42bd84234844769e15616c6f68e698f74e41a8ced40e258563e")
+        process_block(workers, "37bc436b81b813d84c2cab54c7f1b8fbd162942f49c14df0b4afe462cd2ce0bd")
         # process_blocks(1, 2)
