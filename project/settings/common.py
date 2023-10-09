@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.utils.timezone import make_aware
 
@@ -187,6 +187,8 @@ FRONTEND_URL = os.environ.get("FRONTEND_URL")
 REST_FRAMEWORK = {
     # "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 100,
 }
 
 # drf-spectacular

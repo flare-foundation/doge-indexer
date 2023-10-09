@@ -1,6 +1,6 @@
 from typing import TypedDict
+
 from requests.sessions import Session
-from requests.auth import HTTPBasicAuth
 
 
 class ClientInitConfig(TypedDict):

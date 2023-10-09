@@ -1,14 +1,15 @@
 from django.db import models
 
 from doge_indexer.models.model_utils import HexString32ByteField
+from doge_indexer.models.types import IBlockResponse
 
 
 class DogeBlock(models.Model):
-    blockHash = HexString32ByteField(primary_key=True)
+    block_hash = HexString32ByteField(primary_key=True)
 
-    blockNumber = models.PositiveIntegerField()
+    block_number = models.PositiveIntegerField()
     timestamp = models.PositiveBigIntegerField()
-    previousBlockHash = HexString32ByteField()
+    previous_block_hash = HexString32ByteField()
 
     # Number of transactions in block
     transactions = models.PositiveIntegerField()
@@ -16,12 +17,26 @@ class DogeBlock(models.Model):
     confirmed = models.BooleanField(default=False)
 
     # relevant only if confirmed not true
-    numberOfConfirmations = models.PositiveIntegerField()
+    # TODO: GrePod why
+    # number_of_confirmations = models.PositiveIntegerField()
 
     class Meta:
-        indexes = [
-            models.Index(fields=["blockNumber"]),
+        indexes = (
+            models.Index(fields=["block_number"]),
             models.Index(fields=["timestamp"]),
-            models.Index(fields=["previousBlockHash"]),
-        ]
+            models.Index(fields=["previous_block_hash"]),
+        )
 
+    def __str__(self) -> str:
+        return f"Block {self.block_number} : {self.block_hash}"
+
+    @classmethod
+    def object_from_node_response(cls, response: IBlockResponse):
+        return cls(
+            block_number=response["height"],
+            timestamp=response["time"],
+            block_hash=response["hash"],
+            previous_block_hash=response["previousblockhash"],
+            transactions=len(response["tx"]),
+            confirmed=True,
+        )

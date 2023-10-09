@@ -22,9 +22,7 @@ class AbstractTransactionOutput(models.Model):
 
     class Meta:
         abstract = True
-        indexes = [
-            models.Index(fields=["script_key_address"]),
-        ]
+        indexes = (models.Index(fields=["script_key_address"]),)
 
     def to_vout_response(self) -> IUtxoVoutTransaction:
         print(self.value)
@@ -46,7 +44,7 @@ class TransactionOutput(AbstractTransactionOutput):
         unique_together = (("transaction_link", "n"),)
 
     @classmethod
-    def object_from_node_response(cls, response: IUtxoVoutTransaction, transaction_link):
+    def object_from_node_response(cls, response: IUtxoVoutTransaction, transaction_link_id: str):
         script_pub_key = response["scriptPubKey"]
         if "address" in script_pub_key:
             address = script_pub_key["address"]
@@ -55,7 +53,7 @@ class TransactionOutput(AbstractTransactionOutput):
         else:
             address = ""
         return cls(
-            transaction_link=transaction_link,
+            transaction_link_id=transaction_link_id,
             n=response["n"],
             value=response["value"],
             script_key_asm=script_pub_key["asm"],
@@ -64,6 +62,7 @@ class TransactionOutput(AbstractTransactionOutput):
             script_key_type=script_pub_key["type"],
             script_key_address=address,
         )
+
 
 class TransactionInputCoinbase(models.Model):
     transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE)
@@ -74,26 +73,28 @@ class TransactionInputCoinbase(models.Model):
     vin_coinbase = models.CharField()
     vin_sequence = models.PositiveBigIntegerField()
 
+    def __str__(self) -> str:
+        return f"Coinbase vin for tx: {self.transaction_link.transaction_id}"
+
     @classmethod
-    def object_from_node_response(
-        cls, vin_n: int, vin_response: IUtxoVinTransaction, transaction_link
-    ):
+    def object_from_node_response(cls, vin_n: int, vin_response: IUtxoVinTransaction, transaction_link_id: str):
         assert vin_n == 0, "Coinbase transaction should always be first in vin array"
         if "coinbase" in vin_response:
             return cls(
-                transaction_link=transaction_link,
+                transaction_link_id=transaction_link_id,
                 vin_n=vin_n,
-                vin_coinbase = vin_response["coinbase"],
-                vin_sequence = vin_response["sequence"],
+                vin_coinbase=vin_response["coinbase"],
+                vin_sequence=vin_response["sequence"],
             )
         else:
-            raise Exception("Not a coinbase transaction") 
-        
+            raise Exception("Not a coinbase transaction")
+
     def to_vin_response(self) -> IUtxoVinTransaction:
         return {
             "coinbase": self.vin_coinbase,
             "sequence": self.vin_sequence,
         }
+
 
 class TransactionInput(AbstractTransactionOutput):
     transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE)
@@ -134,8 +135,12 @@ class TransactionInput(AbstractTransactionOutput):
 
     @classmethod
     def object_from_node_response(
-        cls, vin_n: int, vin_response: IUtxoVinTransaction, vout_response: IUtxoVoutTransaction, transaction_link
-    ):  
+        cls,
+        vin_n: int,
+        vin_response: IUtxoVinTransaction,
+        vout_response: IUtxoVoutTransaction,
+        transaction_link_id: str,
+    ):
         vout_script_pub_key = vout_response["scriptPubKey"]
         if "address" in vout_script_pub_key:
             address = vout_script_pub_key["address"]
@@ -146,7 +151,7 @@ class TransactionInput(AbstractTransactionOutput):
 
         if "coinbase" in vin_response:
             # TODO: create object TransactionInputCoinbase
-            coinbase = vin_response["coinbase"]
+            vin_response["coinbase"]
             original_txid = None
             vout_index = None
             script_sig_asm = None
@@ -155,14 +160,13 @@ class TransactionInput(AbstractTransactionOutput):
             assert "txid" in vin_response
             assert "vout" in vin_response
             assert "scriptSig" in vin_response
-            coinbase = None
             original_txid = vin_response["txid"]
             vout_index = vin_response["vout"]
             script_sig_asm = vin_response["scriptSig"]["asm"]
             script_sig_hex = vin_response["scriptSig"]["hex"]
 
         return cls(
-            transaction_link=transaction_link,
+            transaction_link_id=transaction_link_id,
             vin_n=vin_n,
             # (pre)vout part
             n=vout_response["n"],
@@ -173,10 +177,9 @@ class TransactionInput(AbstractTransactionOutput):
             script_key_type=vout_script_pub_key["type"],
             script_key_address=address,
             # vin part
-            vin_previous_txid = original_txid,
-            vin_vout_index = vout_index,
-            vin_sequence = vin_response["sequence"],
-            vin_script_sig_asm = script_sig_asm,
-            vin_script_sig_hex = script_sig_hex
+            vin_previous_txid=original_txid,
+            vin_vout_index=vout_index,
+            vin_sequence=vin_response["sequence"],
+            vin_script_sig_asm=script_sig_asm,
+            vin_script_sig_hex=script_sig_hex,
         )
-        

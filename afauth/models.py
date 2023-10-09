@@ -1,11 +1,8 @@
 from string import ascii_lowercase, ascii_uppercase, digits, punctuation
 
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.core import exceptions, mail
+from django.core import exceptions
 from django.db import models
-from django.dispatch import receiver
-from django.template import loader
 from simple_history.models import HistoricalRecords
 
 

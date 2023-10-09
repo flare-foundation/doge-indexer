@@ -4,60 +4,56 @@ from doge_indexer.models.model_utils import HexString32ByteField
 from doge_indexer.models.types import ITransactionResponse
 from doge_indexer.utils import is_valid_bytes_32_hex
 
-ZERO_MIC = '0000000000000000000000000000000000000000000000000000000000000000'
+ZERO_MIC = "0000000000000000000000000000000000000000000000000000000000000000"
+
 
 class DogeTransaction(models.Model):
-    transactionId = HexString32ByteField(primary_key=True)
+    transaction_id = HexString32ByteField(primary_key=True)
 
-    blockNumber = models.PositiveIntegerField()
+    block_number = models.PositiveIntegerField()
     timestamp = models.PositiveBigIntegerField()
 
-    paymentReference = HexString32ByteField()
+    payment_reference = HexString32ByteField()
 
     # All transactions but coinbase are native payment transactions
-    isNativePayment = models.BooleanField(default=False)
+    is_native_payment = models.BooleanField(default=False)
 
-    transactionType = models.CharField()
+    # TODO: update to enum field
+    transaction_type = models.CharField()
 
     # response = models.BinaryField()
 
     class Meta:
-        indexes = [
-            models.Index(fields=["blockNumber"]),
+        indexes = (
+            models.Index(fields=["block_number"]),
             models.Index(fields=["timestamp"]),
-            models.Index(fields=["paymentReference"]),
-            models.Index(fields=["transactionType"]),
-        ]
+            models.Index(fields=["payment_reference"]),
+            models.Index(fields=["transaction_type"]),
+        )
+
+    def __str__(self) -> str:
+        return f"Transaction {self.transaction_id} in block : {self.block_number}"
 
     @classmethod
     def object_from_node_response(cls, response: ITransactionResponse, block_number: int, timestamp: int):
         ref = cls.__extract_payment_reference(response)
         return cls(
-            blockNumber=block_number,
+            block_number=block_number,
             timestamp=timestamp,
-            transactionId=response["txid"],
-            paymentReference=ref,
-            isNativePayment=True,
-            transactionType="full_payment",
+            transaction_id=response["txid"],
+            payment_reference=ref,
+            is_native_payment=True,
+            transaction_type="full_payment",
         )
-
-
-    # @classmethod
-    # def create_from_node_response(cls, response: ITransactionResponse, block_number: int, timestamp: int):
-    #     ref = cls.__extract_payment_reference(response)
-    #     return cls.objects.create(
-    #         blockNumber=block_number,
-    #         timestamp=timestamp,
-    #         transactionId=response["txid"],
-    #         paymentReference=ref,
-    #         isNativePayment=True,
-    #         transactionType="full_payment",
-    #     )
 
     @staticmethod
     def __extract_payment_reference(response: ITransactionResponse):
         def is_op_return(vout):
-            return "scriptPubKey" in vout and "asm" in vout["scriptPubKey"] and vout["scriptPubKey"]["asm"].startswith("OP_RETURN")                                     
+            return (
+                "scriptPubKey" in vout
+                and "asm" in vout["scriptPubKey"]
+                and vout["scriptPubKey"]["asm"].startswith("OP_RETURN")
+            )
 
         std_references = []
 
@@ -71,5 +67,3 @@ class DogeTransaction(models.Model):
         if len(std_references) == 1:
             return std_references[0]
         return ZERO_MIC
-    
-

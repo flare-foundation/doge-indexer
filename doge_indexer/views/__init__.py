@@ -1,0 +1,2 @@
+from .block_view_set import DogeBlockViewSet
+from .transaction_view_set import DogeTransactionViewSet
