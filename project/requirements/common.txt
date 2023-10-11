@@ -25,3 +25,4 @@ types-setuptools
 
 # Other
 requests==2.31.0
+attrs==23.1.0
