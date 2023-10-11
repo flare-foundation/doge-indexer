@@ -5,6 +5,7 @@ from doge_indexer.models import (
     TransactionInput,
     TransactionInputCoinbase,
     TransactionOutput,
+    DogeBlock
 )
 
 
@@ -38,3 +39,10 @@ class DogeTransactionAdmin(admin.ModelAdmin):
     ordering = ("-timestamp",)
 
     inlines = (TransactionInputCoinbaseInline, TransactionInputInline, TransactionOutputInline)
+
+
+@admin.register(DogeBlock)
+class DogeBlockAdmin(admin.ModelAdmin):
+    list_display = ("block_number", "timestamp", "block_hash", "transactions")
+    search_fields = ("block_number","block_hash")
+    ordering = ("-timestamp",)

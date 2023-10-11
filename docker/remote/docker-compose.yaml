@@ -37,3 +37,25 @@ services:
         syslog-address: "udp://localhost:514"
         tag: "${COMPOSE_PROJECT_NAME}_server|{{.ContainerName}}|{{.FullID}}"
 
+  app-indexer:
+    container_name: ${COMPOSE_PROJECT_NAME}_index_blocks
+    user: ${USER_UID}:${USER_GID}
+    image: ${DOCKER_IMAGE_URL}
+    command: /app/docker/remote/entrypoint-index.sh
+    environment:
+      DB_PORT: 5432
+      DB_HOST: ${COMPOSE_PROJECT_NAME}_db
+    env_file:
+      - .env
+    depends_on:
+      - postgresdb
+    restart: unless-stopped
+    volumes:
+      - ./static/:/appdata/static
+      - ./media/:/appdata/media
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://localhost:514"
+        tag: "${COMPOSE_PROJECT_NAME}_index_blocks|{{.ContainerName}}|{{.FullID}}"
+

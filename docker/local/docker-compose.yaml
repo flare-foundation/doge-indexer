@@ -9,8 +9,8 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     # uncomment if you need to connect to db outside of docker, eg: pgadmin
-    # ports:
-    #   - "127.0.0.1:${DB_PROXY_PORT}:5432"
+    ports:
+      - "127.0.0.1:${DB_PROXY_PORT}:5432"
     # uncomment to persist db data between downs
     # volumes:
     #  - ./db-data/:/var/lib/postgresql/data
