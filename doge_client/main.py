@@ -1,12 +1,6 @@
-from typing import TypedDict
-
 from requests.sessions import Session
 
-
-class ClientInitConfig(TypedDict):
-    url: str
-    username: str
-    password: str
+from configuration.config import config
 
 
 class DogeClient:
@@ -14,8 +8,8 @@ class DogeClient:
     Implements Doge
     """
 
-    def __init__(self, config: ClientInitConfig) -> None:
-        self.url = config["url"]
+    def __init__(self) -> None:
+        self.url = config.NODE_RPC_URL
 
     def _post(self, session: Session, json=None):
         return session.post(self.url, json=json)
