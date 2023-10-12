@@ -22,7 +22,6 @@ select = [
 ]
 
 ignore = [
-    'E203', # whitespace before punctuation, conflict with black
     'E501', # line too long, handled by black
     'C901', # complex structure, not needed
 ]
