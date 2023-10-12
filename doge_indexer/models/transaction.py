@@ -8,20 +8,20 @@ ZERO_MIC = "0000000000000000000000000000000000000000000000000000000000000000"
 
 
 class DogeTransaction(models.Model):
-    transaction_id = HexString32ByteField(primary_key=True)
+    transaction_id = HexString32ByteField(primary_key=True, db_column="transactionId")
 
-    block_number = models.PositiveIntegerField()
-    timestamp = models.PositiveBigIntegerField()
+    block_number = models.PositiveIntegerField(db_column="blockNumber")
+    timestamp = models.PositiveBigIntegerField(db_column="timestamp")
 
-    payment_reference = HexString32ByteField()
+    payment_reference = HexString32ByteField(db_column="paymentReference")
 
     # All transactions but coinbase are native payment transactions
-    is_native_payment = models.BooleanField(default=False)
+    is_native_payment = models.BooleanField(default=False, db_column="isNativePayment")
 
     # TODO: update to enum field
-    transaction_type = models.CharField()
+    transaction_type = models.CharField(db_column="transactionType")
 
-    # response = models.BinaryField()
+    # response = models.BinaryField(db_column="response")
 
     class Meta:
         indexes = (

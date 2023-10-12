@@ -10,15 +10,15 @@ from doge_indexer.models.types import (
 
 
 class AbstractTransactionOutput(models.Model):
-    n = models.PositiveIntegerField()
+    n = models.PositiveIntegerField(db_column="n")
     # currently total circulating supply fits in 20 digits
-    value = models.DecimalField(max_digits=22, decimal_places=8)
+    value = models.DecimalField(max_digits=22, decimal_places=8, db_column="value")
 
-    script_key_asm = models.CharField()
-    script_key_hex = models.CharField()
-    script_key_req_sigs = models.CharField(blank=True, null=True)
-    script_key_type = models.CharField()
-    script_key_address = models.CharField(max_length=64)
+    script_key_asm = models.CharField(db_column="scriptKeyAsm")
+    script_key_hex = models.CharField(db_column="scriptKeyHex")
+    script_key_req_sigs = models.CharField(blank=True, null=True, db_column="scriptKeyReqSigs")
+    script_key_type = models.CharField(db_column="scriptKeyType")
+    script_key_address = models.CharField(max_length=64, db_column="scriptKeyAddress")
 
     class Meta:
         abstract = True
@@ -38,7 +38,7 @@ class AbstractTransactionOutput(models.Model):
 
 
 class TransactionOutput(AbstractTransactionOutput):
-    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE)
+    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE, db_column="transactionLink")
 
     class Meta:
         unique_together = (("transaction_link", "n"),)
@@ -65,13 +65,13 @@ class TransactionOutput(AbstractTransactionOutput):
 
 
 class TransactionInputCoinbase(models.Model):
-    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE)
+    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE, db_column="transactionLink")
 
     # Position in vin array of transaction (always 0 for coinbase)
-    vin_n = models.PositiveIntegerField()
+    vin_n = models.PositiveIntegerField(db_column="vinN")
 
-    vin_coinbase = models.CharField()
-    vin_sequence = models.PositiveBigIntegerField()
+    vin_coinbase = models.CharField(db_column="vinCoinbase")
+    vin_sequence = models.PositiveBigIntegerField(db_column="vinSequence")
 
     def __str__(self) -> str:
         return f"Coinbase vin for tx: {self.transaction_link.transaction_id}"
@@ -97,17 +97,17 @@ class TransactionInputCoinbase(models.Model):
 
 
 class TransactionInput(AbstractTransactionOutput):
-    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE)
+    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE, db_column="transactionLink")
 
     # Position in vin array of transaction
-    vin_n = models.PositiveIntegerField()
+    vin_n = models.PositiveIntegerField(db_column="vinN")
 
-    vin_previous_txid = HexString32ByteField()
-    vin_vout_index = models.PositiveIntegerField()
-    vin_sequence = models.PositiveBigIntegerField()
+    vin_previous_txid = HexString32ByteField(db_column="vinPreviousTxid")
+    vin_vout_index = models.PositiveIntegerField(db_column="vinVoutIndex")
+    vin_sequence = models.PositiveBigIntegerField(db_column="vinSequence")
 
-    vin_script_sig_asm = models.CharField()
-    vin_script_sig_hex = models.CharField()
+    vin_script_sig_asm = models.CharField(db_column="vinScriptSigAsm")
+    vin_script_sig_hex = models.CharField(db_column="vinScriptSigHex")
 
     # TODO: Add witness data to db if needed
 
