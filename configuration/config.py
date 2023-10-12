@@ -1,5 +1,6 @@
-from configuration.types import Config
 import os
+
+from configuration.types import Config
 
 
 def get_config() -> Config:

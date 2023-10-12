@@ -1,11 +1,11 @@
 from django.contrib import admin
 
 from doge_indexer.models import (
+    DogeBlock,
     DogeTransaction,
     TransactionInput,
     TransactionInputCoinbase,
     TransactionOutput,
-    DogeBlock,
 )
 
 

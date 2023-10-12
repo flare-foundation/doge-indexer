@@ -8,6 +8,7 @@ from django.db import transaction
 from requests.auth import HTTPBasicAuth
 from requests.sessions import Session
 
+from configuration.config import config
 from doge_client.main import DogeClient
 from doge_indexer.models import (
     DogeBlock,
@@ -17,7 +18,6 @@ from doge_indexer.models import (
     TransactionOutput,
 )
 from doge_indexer.models.types import IUtxoVinTransaction
-from configuration.config import config
 
 
 class BlockProcessorMemory(TypedDict):
@@ -30,6 +30,7 @@ class BlockProcessorMemory(TypedDict):
 class BlockInformationPassing(TypedDict):
     block_num: int
     block_ts: int
+
 
 ## Helper functions
 
