@@ -1,7 +1,7 @@
-from attrs import define
+from attrs import frozen
 
 
-@define
+@frozen
 class Config:
     NODE_RPC_URL: str
     AUTH_USERNAME: str
