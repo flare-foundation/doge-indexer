@@ -149,6 +149,7 @@ class DogeIndexerClient:
 
         # multithreading part of the processing
         workers = []
+
         for worker_index in range(config.NUMBER_OF_WORKERS):
             t = threading.Thread(
                 target=thread_worker, args=(self.workers[worker_index], process_queue, processed_blocks)
@@ -156,9 +157,22 @@ class DogeIndexerClient:
             workers.append(t)
             t.start()
 
+        # while any([t.is_alive() for t in workers]):
+        #     print(len(list((filter(lambda t: t.is_alive(), workers)))))
+        #     time.sleep(0.7 + 0.1)
+
         [t.join() for t in workers]
 
+        if not process_queue.empty():
+            raise Exception("Queue should be empty after processing")
+
         # TODO: think about handling this in 2 steps of multithreading
+
+        # print("Len of stuff")
+        # print(len(processed_blocks["tx"]))
+        # print(len(processed_blocks["vins"]))
+        # print(len(processed_blocks["vins_cb"]))
+        # print(len(processed_blocks["vouts"]))
 
         # Save to DB (this can be done in parallel) with other block processing
         with transaction.atomic():
@@ -237,4 +251,5 @@ def thread_worker(session: Session, process_queue: queue.Queue, processed_block:
         item = process_queue.get()
         if callable(item):
             item(session, processed_block)
-        break
+        else:
+            raise Exception("Item in queue is not callable")

@@ -16,7 +16,7 @@ class AbstractTransactionOutput(models.Model):
 
     script_key_asm = models.CharField(db_column="scriptKeyAsm")
     script_key_hex = models.CharField(db_column="scriptKeyHex")
-    script_key_req_sigs = models.CharField(blank=True, null=True, db_column="scriptKeyReqSigs")
+    script_key_req_sigs = models.CharField(blank=True, null=True, db_column="scriptKeyReqSigs")  # ignore: DJ001
     script_key_type = models.CharField(db_column="scriptKeyType")
     script_key_address = models.CharField(max_length=64, db_column="scriptKeyAddress")
 
@@ -38,7 +38,7 @@ class AbstractTransactionOutput(models.Model):
 
 
 class TransactionOutput(AbstractTransactionOutput):
-    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE, db_column="transactionLink")
+    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE)
 
     class Meta:
         unique_together = (("transaction_link", "n"),)
@@ -65,7 +65,7 @@ class TransactionOutput(AbstractTransactionOutput):
 
 
 class TransactionInputCoinbase(models.Model):
-    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE, db_column="transactionLink")
+    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE)
 
     # Position in vin array of transaction (always 0 for coinbase)
     vin_n = models.PositiveIntegerField(db_column="vinN")
@@ -97,7 +97,7 @@ class TransactionInputCoinbase(models.Model):
 
 
 class TransactionInput(AbstractTransactionOutput):
-    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE, db_column="transactionLink")
+    transaction_link = models.ForeignKey("DogeTransaction", on_delete=models.CASCADE)
 
     # Position in vin array of transaction
     vin_n = models.PositiveIntegerField(db_column="vinN")
