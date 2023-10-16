@@ -35,7 +35,7 @@ class TransactionOutputInline(admin.TabularInline):
 @admin.register(DogeTransaction)
 class DogeTransactionAdmin(admin.ModelAdmin):
     list_display = ("transaction_id", "block_number", "timestamp", "payment_reference")
-    search_fields = ("transactionId", "block_number")
+    search_fields = ("transaction_id", "block_number")
     ordering = ("-timestamp",)
 
     inlines = (TransactionInputCoinbaseInline, TransactionInputInline, TransactionOutputInline)
