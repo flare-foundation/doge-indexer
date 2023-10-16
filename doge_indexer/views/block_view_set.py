@@ -12,8 +12,6 @@ class DogeBlockViewSet(
     permission_classes = ()
     base_model = DogeBlock
     serializer_class = DogeBlockSerializer
-    http_method_names = ["get"]
 
     def get_queryset(self):
-        queryset = self.base_model.objects.all()
-        return queryset
+        return self.base_model.objects.all()

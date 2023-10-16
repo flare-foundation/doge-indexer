@@ -70,13 +70,31 @@ build_tags:
     - tags
 
 test_django:
-  <<: *test
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+    POSTGRES_DB: "db"
+    DB_NAME: "db"
+    POSTGRES_USER: "dbuser"
+    DB_USER: "dbuser"
+    POSTGRES_PASSWORD: "dbpass"
+    DB_PASSWORD: "dbpass"
+    DB_HOST: "postgresdb"
+    DB_PORT: "5432"
+  services:
+    - name: postgres:15
+      alias: postgresdb
+  image:
+    name: $CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH
+    entrypoint: [""]
   script:
     - cd /app
     - python manage.py test --settings=project.settings.ci_testing
   artifacts:
     reports:
       junit: testreport.xml
+  only:
+    - branches
 
 test_black:
   <<: *test

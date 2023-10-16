@@ -5,20 +5,20 @@ from doge_indexer.models.types import IBlockResponse
 
 
 class DogeBlock(models.Model):
-    block_hash = HexString32ByteField(primary_key=True)
+    block_hash = HexString32ByteField(primary_key=True, db_column="blockHash")
 
-    block_number = models.PositiveIntegerField()
-    timestamp = models.PositiveBigIntegerField()
-    previous_block_hash = HexString32ByteField()
+    block_number = models.PositiveIntegerField(db_column="blockNumber")
+    timestamp = models.PositiveBigIntegerField(db_column="timestamp")
+    previous_block_hash = HexString32ByteField(db_column="previousBlockHash")
 
     # Number of transactions in block
-    transactions = models.PositiveIntegerField()
+    transactions = models.PositiveIntegerField(db_column="transactions")
 
-    confirmed = models.BooleanField(default=False)
+    confirmed = models.BooleanField(default=False, db_column="confirmed")
 
     # relevant only if confirmed not true
     # TODO: GrePod why
-    # number_of_confirmations = models.PositiveIntegerField()
+    # number_of_confirmations = models.PositiveIntegerField(db_column="numberOfConfirmations")
 
     class Meta:
         indexes = (
