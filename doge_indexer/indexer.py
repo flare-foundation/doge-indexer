@@ -16,6 +16,8 @@ from doge_indexer.models import (
     TransactionInput,
     TransactionInputCoinbase,
     TransactionOutput,
+    TipSyncState,
+    TipSyncStateChoices
 )
 from doge_indexer.models.types import IUtxoVinTransaction
 
@@ -69,7 +71,8 @@ class DogeIndexerClient:
         self.toplevel_worker = self.workers[0]
 
         # Determining starting block height for indexing
-        self.latest_processed_block_height = self.extract_initial_block_height()
+        self.latest_indexed_block_height = self.extract_initial_block_height()
+        self.latest_tip_block_height = 0
 
     def extract_initial_block_height(self) -> int:
         """
@@ -93,16 +96,23 @@ class DogeIndexerClient:
         """
         while True:
             height = self._get_current_block_height(self.toplevel_worker)
-            if self.latest_processed_block_height < height - config.NUMBER_OF_BLOCK_CONFIRMATIONS:
+
+            if self.latest_tip_block_height < height:
+                # We need to update the tip state and process new blocks
+                self.update_tip_state_indexing(height)
+                self.latest_tip_block_height = height
                 for i in range(
-                    self.latest_processed_block_height + 1, height - config.NUMBER_OF_BLOCK_CONFIRMATIONS + 1
+                    self.latest_indexed_block_height + 1, height - config.NUMBER_OF_BLOCK_CONFIRMATIONS + 1
                 ):
                     start = time.time()
                     self.process_block(i)
                     print(f"Processed block: {i} in: ", time.time() - start)
-                    self.latest_processed_block_height = i
+                    self.latest_indexed_block_height = i
+
+                # TODO save all blocks up to tip height
             else:
                 print(f"No new blocks to process, sleeping for {config.INDEXER_POLL_INTERVAL} seconds")
+                self.update_tip_state_idle()
                 time.sleep(config.INDEXER_POLL_INTERVAL)
 
     ## Base methods for interacting with node directly
@@ -124,13 +134,57 @@ class DogeIndexerClient:
     @retry(5)
     def _get_transaction(self, txid: str, worker: Session) -> Any:
         return self._client.get_transaction(worker, txid).json()["result"]
+    
+    ## Tip state management
+    def update_tip_state_indexing(self, block_tip_height: int):
+        """
+        Update the tip state when indexing is in progress
 
-    # Block processing part
+        Args:
+            block_tip_height (int): latest seen block height
+        """
+        tip_state = TipSyncState.get_tip_state()
+        assert tip_state.latest_tip_height <= block_tip_height, "New block height should be higher than the current one"
+        if tip_state.latest_tip_height < block_tip_height:
+            tip_state.latest_tip_height = block_tip_height
+        # Always update the state with latest timestamp
+        tip_state.sync_state = TipSyncStateChoices.syncing
+        tip_state.timestamp = int(time.time())
+        tip_state.save()
+
+    def update_tip_state_idle(self):
+        """
+        Update the tip state when we see no new blocks to process
+        """
+        tip_state = TipSyncState.get_tip_state()
+        tip_state.sync_state = TipSyncStateChoices.up_to_date
+        tip_state.timestamp = int(time.time())
+        tip_state.save()
+
+    def update_tip_state_done_block_process(self, indexed_block_height: int):
+        """
+        Update the tip state when we processed the block and saved it to db
+
+        Args:
+            indexed_block_height (int): _description_
+        """
+        tip_state = TipSyncState.get_tip_state()
+        assert tip_state.latest_indexed_height < indexed_block_height, "Process block was already indexed"
+        if tip_state.latest_indexed_height < indexed_block_height:
+            tip_state.latest_indexed_height = indexed_block_height
+        tip_state.sync_state = TipSyncStateChoices.syncing
+        tip_state.timestamp = int(time.time())
+        tip_state.save()
+  
+
+    ## Block processing part
     def process_block(self, block_height: int):
         # TODO: we always assume that block processing is for blocks that are for sure on main branch of the blockchain
 
         processed_blocks: BlockProcessorMemory = {"tx": [], "vins": [], "vins_cb": [], "vouts": []}
         process_queue: queue.Queue = queue.Queue()
+
+        start = time.time()
 
         block_hash = self._get_block_hash_from_height(block_height, self.toplevel_worker)
         res_block = self._get_block_by_hash(block_hash, self.toplevel_worker)
@@ -141,6 +195,8 @@ class DogeIndexerClient:
             "block_ts": res_block["time"],
         }
 
+        # Update the block info in DB, indicating it has processed transactions once we proceeded them
+        ## do it within transaction atomic update
         block_db = DogeBlock.object_from_node_response(res_block)
 
         # Put all of the transaction in block on the processing queue
@@ -163,6 +219,8 @@ class DogeIndexerClient:
 
         [t.join() for t in workers]
 
+        print("Processing took: ", time.time() - start)
+
         if not process_queue.empty():
             raise Exception("Queue should be empty after processing")
 
@@ -174,6 +232,8 @@ class DogeIndexerClient:
         # print(len(processed_blocks["vins_cb"]))
         # print(len(processed_blocks["vouts"]))
 
+        start = time.time()
+
         # Save to DB (this can be done in parallel) with other block processing
         with transaction.atomic():
             DogeTransaction.objects.bulk_create(processed_blocks["tx"], batch_size=999)
@@ -181,6 +241,9 @@ class DogeIndexerClient:
             TransactionInput.objects.bulk_create(processed_blocks["vins"], batch_size=999)
             TransactionOutput.objects.bulk_create(processed_blocks["vouts"], batch_size=999)
             DogeBlock.objects.bulk_create([block_db])
+            self.update_tip_state_done_block_process(block_height)
+
+        print("Saving to DB took: ", time.time() - start)
 
 
 ## Block processing functions

@@ -6,8 +6,8 @@ from doge_indexer.models import (
     TransactionInput,
     TransactionInputCoinbase,
     TransactionOutput,
+    TipSyncState
 )
-
 
 class TransactionInputInline(admin.TabularInline):
     model = TransactionInput
@@ -46,3 +46,10 @@ class DogeBlockAdmin(admin.ModelAdmin):
     list_display = ("block_number", "timestamp", "block_hash", "transactions")
     search_fields = ("block_number", "block_hash")
     ordering = ("-timestamp",)
+
+
+@admin.register(TipSyncState)
+class TipSyncStateAdmin(admin.ModelAdmin):
+    list_display = ("timestamp", "sync_state", "latest_tip_height", "latest_indexed_height")
+    fields = ("timestamp", "sync_state", "latest_tip_height", "latest_indexed_height")
+    search_fields = ()
