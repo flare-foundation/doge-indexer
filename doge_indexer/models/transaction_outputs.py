@@ -12,7 +12,8 @@ from doge_indexer.models.types import (
 class AbstractTransactionOutput(models.Model):
     n = models.PositiveIntegerField(db_column="n")
     # currently total circulating supply fits in 20 digits
-    value = models.DecimalField(max_digits=22, decimal_places=8, db_column="value")
+    # value = models.DecimalField(max_digits=22, decimal_places=8, db_column="value")
+    value = models.CharField(db_column="value")
 
     script_key_asm = models.CharField(db_column="scriptKeyAsm")
     script_key_hex = models.CharField(db_column="scriptKeyHex")

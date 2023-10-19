@@ -17,7 +17,7 @@ from doge_indexer.models import (
     TransactionInputCoinbase,
     TransactionOutput,
     TipSyncState,
-    TipSyncStateChoices
+    TipSyncStateChoices,
 )
 from doge_indexer.models.types import IUtxoVinTransaction
 
@@ -101,9 +101,7 @@ class DogeIndexerClient:
                 # We need to update the tip state and process new blocks
                 self.update_tip_state_indexing(height)
                 self.latest_tip_block_height = height
-                for i in range(
-                    self.latest_indexed_block_height + 1, height - config.NUMBER_OF_BLOCK_CONFIRMATIONS + 1
-                ):
+                for i in range(self.latest_indexed_block_height + 1, height - config.NUMBER_OF_BLOCK_CONFIRMATIONS + 1):
                     start = time.time()
                     self.process_block(i)
                     print(f"Processed block: {i} in: ", time.time() - start)
@@ -119,22 +117,22 @@ class DogeIndexerClient:
 
     @retry(5)
     def _get_current_block_height(self, worker: Session) -> int:
-        return self._client.get_block_height(worker).json()["result"]
+        return self._client.get_block_height(worker).json(parse_float=str)["result"]
 
     @retry(5)
     def _get_block_hash_from_height(self, block_height: int, worker: Session) -> str:
-        return self._client.get_block_hash_from_height(worker, block_height).json()["result"]
+        return self._client.get_block_hash_from_height(worker, block_height).json(parse_float=str)["result"]
 
     # TODO: type hint (IBlockResponse)
     @retry(5)
     def _get_block_by_hash(self, block_hash: str, worker: Session) -> Any:
-        return self._client.get_block_by_hash(worker, block_hash).json()["result"]
+        return self._client.get_block_by_hash(worker, block_hash).json(parse_float=str)["result"]
 
     # TODO: type hint (ITransactionResponse)
     @retry(5)
     def _get_transaction(self, txid: str, worker: Session) -> Any:
-        return self._client.get_transaction(worker, txid).json()["result"]
-    
+        return self._client.get_transaction(worker, txid).json(parse_float=str)["result"]
+
     ## Tip state management
     def update_tip_state_indexing(self, block_tip_height: int):
         """
@@ -175,7 +173,6 @@ class DogeIndexerClient:
         tip_state.sync_state = TipSyncStateChoices.syncing
         tip_state.timestamp = int(time.time())
         tip_state.save()
-  
 
     ## Block processing part
     def process_block(self, block_height: int):
