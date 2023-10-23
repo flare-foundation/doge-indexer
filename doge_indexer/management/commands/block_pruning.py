@@ -1,4 +1,5 @@
 import time
+from django.db import transaction
 
 from django.core.management.base import BaseCommand
 
@@ -24,11 +25,12 @@ class Command(BaseCommand):
 
             cutoff = now_ts - config.PRUNE_KEEP_DAYS * 24 * 60 * 60
 
-            # objects with fk to transaction first
-            TransactionInput.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
-            TransactionInputCoinbase.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
-            TransactionOutput.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
+            with transaction.atomic():
+                # objects with fk to transaction first
+                TransactionInput.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
+                TransactionInputCoinbase.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
+                TransactionOutput.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
 
-            # then others
-            DogeBlock.objects.filter(timestamp__lt=cutoff).delete()
-            DogeTransaction.objects.filter(timestamp__lt=cutoff).delete()
+                # then others
+                DogeBlock.objects.filter(timestamp__lt=cutoff).delete()
+                DogeTransaction.objects.filter(timestamp__lt=cutoff).delete()
