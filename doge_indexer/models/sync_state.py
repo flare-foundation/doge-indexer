@@ -33,4 +33,24 @@ class TipSyncState(models.Model):
                 latest_indexed_height=0,
                 timestamp = int(time.time())
             )
-        
+
+class PruneSyncState(models.Model):
+    latest_indexed_tail_height = models.PositiveIntegerField(db_column="latestIndexedTailHeight")
+
+    # timestamp of latest update
+    timestamp = models.PositiveIntegerField(db_column="timestamp")
+
+
+    def __str__(self) -> str:
+        return f"Tail pruning state: bottom indexed height: {self.latest_indexed_tail_height} (at {self.timestamp})"
+    
+    @classmethod
+    def get_the_one(cls):
+        if cls.objects.filter(pk=TIP_STATE_ID).exists():
+            return cls.objects.get(pk=TIP_STATE_ID)
+        else:
+            return cls.objects.create(
+                pk=TIP_STATE_ID,
+                latest_indexed_tail_height=0,
+                timestamp = int(time.time())
+            )

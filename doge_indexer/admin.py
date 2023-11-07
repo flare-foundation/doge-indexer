@@ -8,6 +8,7 @@ from doge_indexer.models import (
     TransactionOutput,
     TipSyncState
 )
+from doge_indexer.models.sync_state import PruneSyncState
 
 class TransactionInputInline(admin.TabularInline):
     model = TransactionInput
@@ -52,4 +53,11 @@ class DogeBlockAdmin(admin.ModelAdmin):
 class TipSyncStateAdmin(admin.ModelAdmin):
     list_display = ("timestamp", "sync_state", "latest_tip_height", "latest_indexed_height")
     fields = ("timestamp", "sync_state", "latest_tip_height", "latest_indexed_height")
+    search_fields = ()
+
+
+@admin.register(PruneSyncState)
+class PruneSyncStateAdmin(admin.ModelAdmin):
+    list_display = ("timestamp", "latest_indexed_tail_height")
+    fields = ("timestamp", "latest_indexed_tail_height")
     search_fields = ()
