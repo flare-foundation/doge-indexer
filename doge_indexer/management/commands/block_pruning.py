@@ -1,7 +1,7 @@
 import time
-from django.db import transaction
 
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from configuration.config import config
 from doge_indexer.models import (

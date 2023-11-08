@@ -1,5 +1,7 @@
 import time
+
 from django.db import models
+
 
 class TipSyncStateChoices(models.TextChoices):
     created = "created", "Created"
@@ -7,7 +9,9 @@ class TipSyncStateChoices(models.TextChoices):
     up_to_date = "up_to_date", "Up to date"
     error = "error", "Error"
 
+
 TIP_STATE_ID = 1
+
 
 class TipSyncState(models.Model):
     sync_state = models.CharField(max_length=10, choices=TipSyncStateChoices.choices, db_column="syncState")
@@ -17,10 +21,9 @@ class TipSyncState(models.Model):
     # timestamp of latest update
     timestamp = models.PositiveIntegerField(db_column="timestamp")
 
-
     def __str__(self) -> str:
         return f"Sync state: {self.sync_state} - latest tip height: {self.latest_tip_height} - latest indexed height: {self.latest_indexed_height}"
-    
+
     @classmethod
     def get_tip_state(cls):
         if cls.objects.filter(pk=TIP_STATE_ID).exists():
@@ -31,8 +34,9 @@ class TipSyncState(models.Model):
                 sync_state=TipSyncStateChoices.created,
                 latest_tip_height=0,
                 latest_indexed_height=0,
-                timestamp = int(time.time())
+                timestamp=int(time.time()),
             )
+
 
 class PruneSyncState(models.Model):
     latest_indexed_tail_height = models.PositiveIntegerField(db_column="latestIndexedTailHeight")
@@ -40,17 +44,12 @@ class PruneSyncState(models.Model):
     # timestamp of latest update
     timestamp = models.PositiveIntegerField(db_column="timestamp")
 
-
     def __str__(self) -> str:
         return f"Tail pruning state: bottom indexed height: {self.latest_indexed_tail_height} (at {self.timestamp})"
-    
+
     @classmethod
     def get_the_one(cls):
         if cls.objects.filter(pk=TIP_STATE_ID).exists():
             return cls.objects.get(pk=TIP_STATE_ID)
         else:
-            return cls.objects.create(
-                pk=TIP_STATE_ID,
-                latest_indexed_tail_height=0,
-                timestamp = int(time.time())
-            )
+            return cls.objects.create(pk=TIP_STATE_ID, latest_indexed_tail_height=0, timestamp=int(time.time()))

@@ -3,12 +3,13 @@ from django.contrib import admin
 from doge_indexer.models import (
     DogeBlock,
     DogeTransaction,
+    TipSyncState,
     TransactionInput,
     TransactionInputCoinbase,
     TransactionOutput,
-    TipSyncState
 )
 from doge_indexer.models.sync_state import PruneSyncState
+
 
 class TransactionInputInline(admin.TabularInline):
     model = TransactionInput

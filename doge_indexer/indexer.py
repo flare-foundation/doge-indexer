@@ -13,11 +13,11 @@ from doge_client.main import DogeClient
 from doge_indexer.models import (
     DogeBlock,
     DogeTransaction,
+    TipSyncState,
+    TipSyncStateChoices,
     TransactionInput,
     TransactionInputCoinbase,
     TransactionOutput,
-    TipSyncState,
-    TipSyncStateChoices,
 )
 from doge_indexer.models.types import IUtxoVinTransaction
 
