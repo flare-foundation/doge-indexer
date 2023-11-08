@@ -1,3 +1,4 @@
+import logging
 import time
 
 from django.core.management.base import BaseCommand
@@ -13,15 +14,18 @@ from doge_indexer.models import (
 )
 from doge_indexer.models.sync_state import PruneSyncState
 
+logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+        prune_state = PruneSyncState.instance()
         while True:
             if not config.PRUNE_KEEP_DAYS:
                 return
 
             now_ts = int(time.time())
-            print(f"Pruning at: {now_ts}")
+            logger.info(f"Pruning at: {now_ts}")
 
             cutoff = now_ts - config.PRUNE_KEEP_DAYS * 24 * 60 * 60
 
@@ -42,10 +46,10 @@ class Command(BaseCommand):
                     if bottom_block.block_number != bottom_block_transaction.block_number:
                         raise Exception("Bottom block and bottom transaction block number mismatch while pruning")
 
-                    prune_state = PruneSyncState.get_the_one()
                     prune_state.latest_indexed_tail_height = bottom_block.block_number
                     prune_state.timestamp = now_ts
                     prune_state.save()
 
-            print(f"Sleeping for {config.PRUNE_INTERVAL_SECONDS} sec")
+            logger.info(f"Sleeping for {config.PRUNE_INTERVAL_SECONDS} sec")
+
             time.sleep(config.PRUNE_INTERVAL_SECONDS)

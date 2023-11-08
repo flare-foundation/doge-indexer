@@ -141,7 +141,7 @@ class DogeIndexerClient:
         Args:
             block_tip_height (int): latest seen block height
         """
-        tip_state = TipSyncState.get_tip_state()
+        tip_state = TipSyncState.instance()
         assert tip_state.latest_tip_height <= block_tip_height, "New block height should be higher than the current one"
         if tip_state.latest_tip_height < block_tip_height:
             tip_state.latest_tip_height = block_tip_height
@@ -154,7 +154,7 @@ class DogeIndexerClient:
         """
         Update the tip state when we see no new blocks to process
         """
-        tip_state = TipSyncState.get_tip_state()
+        tip_state = TipSyncState.instance()
         tip_state.sync_state = TipSyncStateChoices.up_to_date
         tip_state.timestamp = int(time.time())
         tip_state.save()
@@ -166,7 +166,7 @@ class DogeIndexerClient:
         Args:
             indexed_block_height (int): _description_
         """
-        tip_state = TipSyncState.get_tip_state()
+        tip_state = TipSyncState.instance()
         assert tip_state.latest_indexed_height < indexed_block_height, "Process block was already indexed"
         if tip_state.latest_indexed_height < indexed_block_height:
             tip_state.latest_indexed_height = indexed_block_height
