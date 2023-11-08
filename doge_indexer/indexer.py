@@ -1,4 +1,5 @@
 import functools
+import logging
 import queue
 import threading
 import time
@@ -20,6 +21,8 @@ from doge_indexer.models import (
     TransactionOutput,
 )
 from doge_indexer.models.types import IUtxoVinTransaction
+
+logger = logging.getLogger(__name__)
 
 
 class BlockProcessorMemory(TypedDict):
@@ -104,12 +107,12 @@ class DogeIndexerClient:
                 for i in range(self.latest_indexed_block_height + 1, height - config.NUMBER_OF_BLOCK_CONFIRMATIONS + 1):
                     start = time.time()
                     self.process_block(i)
-                    print(f"Processed block: {i} in: ", time.time() - start)
+                    logger.info(f"Processed block: {i} in: ", time.time() - start)
                     self.latest_indexed_block_height = i
 
                 # TODO save all blocks up to tip height
             else:
-                print(f"No new blocks to process, sleeping for {config.INDEXER_POLL_INTERVAL} seconds")
+                logger.info(f"No new blocks to process, sleeping for {config.INDEXER_POLL_INTERVAL} seconds")
                 self.update_tip_state_idle()
                 time.sleep(config.INDEXER_POLL_INTERVAL)
 
@@ -216,7 +219,7 @@ class DogeIndexerClient:
 
         [t.join() for t in workers]
 
-        print("Processing took: ", time.time() - start)
+        logger.info("Processing took: ", time.time() - start)
 
         if not process_queue.empty():
             raise Exception("Queue should be empty after processing")
@@ -240,7 +243,7 @@ class DogeIndexerClient:
             DogeBlock.objects.bulk_create([block_db])
             self.update_tip_state_done_block_process(block_height)
 
-        print("Saving to DB took: ", time.time() - start)
+        logger.info("Saving to DB took: ", time.time() - start)
 
 
 ## Block processing functions
