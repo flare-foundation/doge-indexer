@@ -25,7 +25,7 @@ class Command(BaseCommand):
                 return
 
             now_ts = int(time.time())
-            logger.info(f"Pruning at: {now_ts}")
+            logger.info("Pruning at: %s", now_ts)
 
             cutoff = now_ts - config.PRUNE_KEEP_DAYS * 24 * 60 * 60
 
@@ -50,6 +50,6 @@ class Command(BaseCommand):
                     prune_state.timestamp = now_ts
                     prune_state.save()
 
-            logger.info(f"Sleeping for {config.PRUNE_INTERVAL_SECONDS} sec")
+            logger.info("Sleeping for %s sec", config.PRUNE_INTERVAL_SECONDS)
 
             time.sleep(config.PRUNE_INTERVAL_SECONDS)
