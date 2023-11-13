@@ -1,4 +1,5 @@
 import functools
+import logging
 import queue
 import threading
 import time
@@ -13,13 +14,15 @@ from doge_client.main import DogeClient
 from doge_indexer.models import (
     DogeBlock,
     DogeTransaction,
+    TipSyncState,
+    TipSyncStateChoices,
     TransactionInput,
     TransactionInputCoinbase,
     TransactionOutput,
-    TipSyncState,
-    TipSyncStateChoices,
 )
 from doge_indexer.models.types import IUtxoVinTransaction
+
+logger = logging.getLogger(__name__)
 
 
 class BlockProcessorMemory(TypedDict):
@@ -34,7 +37,7 @@ class BlockInformationPassing(TypedDict):
     block_ts: int
 
 
-## Helper functions
+# Helper functions
 
 
 def new_session():
@@ -61,7 +64,7 @@ def retry(n: int):
     return decorator
 
 
-## Main class
+# Main class
 
 
 class DogeIndexerClient:
@@ -104,16 +107,16 @@ class DogeIndexerClient:
                 for i in range(self.latest_indexed_block_height + 1, height - config.NUMBER_OF_BLOCK_CONFIRMATIONS + 1):
                     start = time.time()
                     self.process_block(i)
-                    print(f"Processed block: {i} in: ", time.time() - start)
+                    logger.info("Processed block: %s in: %s", i, time.time() - start)
                     self.latest_indexed_block_height = i
 
                 # TODO save all blocks up to tip height
             else:
-                print(f"No new blocks to process, sleeping for {config.INDEXER_POLL_INTERVAL} seconds")
+                logger.info("No new blocks to process, sleeping for %s seconds", config.INDEXER_POLL_INTERVAL)
                 self.update_tip_state_idle()
                 time.sleep(config.INDEXER_POLL_INTERVAL)
 
-    ## Base methods for interacting with node directly
+    # Base methods for interacting with node directly
 
     @retry(5)
     def _get_current_block_height(self, worker: Session) -> int:
@@ -133,7 +136,7 @@ class DogeIndexerClient:
     def _get_transaction(self, txid: str, worker: Session) -> Any:
         return self._client.get_transaction(worker, txid).json(parse_float=str)["result"]
 
-    ## Tip state management
+    # Tip state management
     def update_tip_state_indexing(self, block_tip_height: int):
         """
         Update the tip state when indexing is in progress
@@ -141,7 +144,7 @@ class DogeIndexerClient:
         Args:
             block_tip_height (int): latest seen block height
         """
-        tip_state = TipSyncState.get_tip_state()
+        tip_state = TipSyncState.instance()
         assert tip_state.latest_tip_height <= block_tip_height, "New block height should be higher than the current one"
         if tip_state.latest_tip_height < block_tip_height:
             tip_state.latest_tip_height = block_tip_height
@@ -154,7 +157,7 @@ class DogeIndexerClient:
         """
         Update the tip state when we see no new blocks to process
         """
-        tip_state = TipSyncState.get_tip_state()
+        tip_state = TipSyncState.instance()
         tip_state.sync_state = TipSyncStateChoices.up_to_date
         tip_state.timestamp = int(time.time())
         tip_state.save()
@@ -166,7 +169,7 @@ class DogeIndexerClient:
         Args:
             indexed_block_height (int): _description_
         """
-        tip_state = TipSyncState.get_tip_state()
+        tip_state = TipSyncState.instance()
         assert tip_state.latest_indexed_height < indexed_block_height, "Process block was already indexed"
         if tip_state.latest_indexed_height < indexed_block_height:
             tip_state.latest_indexed_height = indexed_block_height
@@ -174,14 +177,14 @@ class DogeIndexerClient:
         tip_state.timestamp = int(time.time())
         tip_state.save()
 
-    ## Block processing part
+    # Block processing part
     def process_block(self, block_height: int):
         # TODO: we always assume that block processing is for blocks that are for sure on main branch of the blockchain
 
         processed_blocks: BlockProcessorMemory = {"tx": [], "vins": [], "vins_cb": [], "vouts": []}
         process_queue: queue.Queue = queue.Queue()
 
-        start = time.time()
+        time.time()
 
         block_hash = self._get_block_hash_from_height(block_height, self.toplevel_worker)
         res_block = self._get_block_by_hash(block_hash, self.toplevel_worker)
@@ -193,7 +196,7 @@ class DogeIndexerClient:
         }
 
         # Update the block info in DB, indicating it has processed transactions once we proceeded them
-        ## do it within transaction atomic update
+        # do it within transaction atomic update
         block_db = DogeBlock.object_from_node_response(res_block)
 
         # Put all of the transaction in block on the processing queue
@@ -210,28 +213,13 @@ class DogeIndexerClient:
             workers.append(t)
             t.start()
 
-        # while any([t.is_alive() for t in workers]):
-        #     print(len(list((filter(lambda t: t.is_alive(), workers)))))
-        #     time.sleep(0.7 + 0.1)
-
         [t.join() for t in workers]
-
-        print("Processing took: ", time.time() - start)
 
         if not process_queue.empty():
             raise Exception("Queue should be empty after processing")
 
         # TODO: think about handling this in 2 steps of multithreading
 
-        # print("Len of stuff")
-        # print(len(processed_blocks["tx"]))
-        # print(len(processed_blocks["vins"]))
-        # print(len(processed_blocks["vins_cb"]))
-        # print(len(processed_blocks["vouts"]))
-
-        start = time.time()
-
-        # Save to DB (this can be done in parallel) with other block processing
         with transaction.atomic():
             DogeTransaction.objects.bulk_create(processed_blocks["tx"], batch_size=999)
             TransactionInputCoinbase.objects.bulk_create(processed_blocks["vins_cb"], batch_size=999)
@@ -240,10 +228,8 @@ class DogeIndexerClient:
             DogeBlock.objects.bulk_create([block_db])
             self.update_tip_state_done_block_process(block_height)
 
-        print("Saving to DB took: ", time.time() - start)
 
-
-## Block processing functions
+# Block processing functions
 
 
 def process_toplevel_transaction(

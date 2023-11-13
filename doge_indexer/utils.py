@@ -1,6 +1,6 @@
 import re
 from enum import Enum
-from decimal import Decimal , getcontext
+
 
 def is_valid_bytes_32_hex(maybe_hex_string: str):
     byte_32_hex_pattern = r"/^(0x|0X)?[0-9a-fA-F]{64}$/"
