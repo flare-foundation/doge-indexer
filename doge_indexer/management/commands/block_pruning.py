@@ -25,9 +25,10 @@ class Command(BaseCommand):
                 return
 
             now_ts = int(time.time())
-            logger.info("Pruning at: %s", now_ts)
 
             cutoff = now_ts - config.PRUNE_KEEP_DAYS * 24 * 60 * 60
+            
+            logger.info("Pruning at: %s", now_ts, " all transactions and block before cutoff: %s", cutoff)
 
             with transaction.atomic():
                 # objects with fk to transaction first
