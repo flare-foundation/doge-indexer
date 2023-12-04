@@ -192,7 +192,7 @@ class DogeIndexerClient:
         tx_ids = res_block["tx"]
         block_info: BlockInformationPassing = {
             "block_num": res_block["height"],
-            "block_ts": res_block["time"],
+            "block_ts": res_block["mediantime"],
         }
 
         # Update the block info in DB, indicating it has processed transactions once we proceeded them

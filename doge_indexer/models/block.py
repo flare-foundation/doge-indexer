@@ -34,7 +34,7 @@ class DogeBlock(models.Model):
     def object_from_node_response(cls, response: IBlockResponse):
         return cls(
             block_number=response["height"],
-            timestamp=response["time"],
+            timestamp=response["mediantime"],
             block_hash=response["hash"],
             previous_block_hash=response["previousblockhash"],
             transactions=len(response["tx"]),
