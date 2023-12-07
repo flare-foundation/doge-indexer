@@ -61,3 +61,5 @@ exclude = ['project/.*']
 module = ['simple_history.*']
 ignore_missing_imports = true
 
+[tool.coverage.run]
+omit = ['project/*', 'manage.py', '*/migrations/*']
