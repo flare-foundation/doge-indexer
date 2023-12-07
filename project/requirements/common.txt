@@ -2,6 +2,7 @@
 black
 ruff
 mypy
+coverage==7.3.2
 
 # Django Core
 django-types

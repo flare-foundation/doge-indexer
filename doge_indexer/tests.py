@@ -188,3 +188,25 @@ class TransactionLogicTest(TestCase):
         self.assertEqual(output_1.n, 1)
         self.assertEqual(output_1.value, "1.97615000")
         self.assertEqual(output_1.script_key_address, "DRKWVU2Zs3aFHgYLBXX8e9d7uMyY1WtmV4")
+
+    def test_should_full_payment_transaction_inputs_details(self):
+        tx_id = "26b85fa8b6104bbfd0a52eb252b1be09dcddc2e3eeb10fef353e663869dcb26a"
+        tx = DogeTransaction.objects.get(transaction_id=tx_id)
+
+        inputs = tx.transactioninput_set.all()
+
+        input_0 = inputs.filter(vin_n=0).first()
+        assert input_0 is not None
+
+        self.assertEqual(input_0.transaction_link.transaction_id, tx_id)
+        self.assertEqual(input_0.vin_n, 0)
+        self.assertEqual(input_0.script_key_address, "DJ7YAd617uFLUoVG7LzJbbk4EZMRCNxkTq")
+        self.assertEqual(input_0.value, "0.00100001")
+
+        input_1 = inputs.filter(vin_n=1).first()
+        assert input_1 is not None
+
+        self.assertEqual(input_1.transaction_link.transaction_id, tx_id)
+        self.assertEqual(input_1.vin_n, 1)
+        self.assertEqual(input_1.script_key_address, "DJ7YAd617uFLUoVG7LzJbbk4EZMRCNxkTq")
+        self.assertEqual(input_1.value, "0.00100001")

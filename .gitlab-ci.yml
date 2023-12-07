@@ -81,6 +81,7 @@ test_django:
     DB_PASSWORD: "dbpass"
     DB_HOST: "postgresdb"
     DB_PORT: "5432"
+    NODE_RPC_URL: "provide_me"
   services:
     - name: postgres:15
       alias: postgresdb
@@ -89,10 +90,13 @@ test_django:
     entrypoint: [""]
   script:
     - cd /app
-    - python manage.py test --settings=project.settings.ci_testing
+    - coverage run --source="." manage.py test --settings=project.settings.ci_testing
+    - coverage xml
   artifacts:
     reports:
-      junit: testreport.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
   only:
     - branches
 

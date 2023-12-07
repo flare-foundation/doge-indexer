@@ -13,7 +13,7 @@ pip install -r project/requirements/local.txt
 pre-commit install
 ```
 
-if you don't have it yet get [afh](https://git.aflabs.org/janezic.matej/afh) here
+if you don't have it yet get [afh](https://git.aflabs.org/janezic.matej/afh) here, its a CLI tool that makes it easier for you to use docker
 
 set up docker
 ```sh
@@ -28,3 +28,21 @@ if you have a dump
 afh import dumps/dump_file
 ```
 
+
+## Testing
+
+To run test simply run
+```sh
+afh manage test
+```
+
+To run the tests with coverage
+```sh
+
+afh exec appserver coverage run manage.py test
+```
+
+and then get the coverage report with 
+```sh
+afh exec appserver coverage report
+```
