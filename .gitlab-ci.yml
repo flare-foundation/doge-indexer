@@ -5,7 +5,7 @@
   variables:
     GIT_STRATEGY: none
   image:
-    name: $CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH
+    name: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
     entrypoint: [""]
   only:
     - branches
@@ -52,7 +52,7 @@ build_branches:
     - mkdir -p /kaniko/.docker
     - echo "$CI_COMMIT_SHA" > COMMIT_HASH
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/remote/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH --cache=true --cache-ttl=120h
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/remote/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG --cache=true --cache-ttl=120h
   only:
     - branches
 
@@ -81,22 +81,24 @@ test_django:
     DB_PASSWORD: "dbpass"
     DB_HOST: "postgresdb"
     DB_PORT: "5432"
-    NODE_RPC_URL: "provide_me"
+    NODE_RPC_URL: "https://provide_me"
+    AUTH_USERNAME: authuser
+    AUTH_PASSWORD: authpass
   services:
     - name: postgres:15
       alias: postgresdb
   image:
-    name: $CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH
+    name: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
     entrypoint: [""]
   script:
     - cd /app
     - coverage run --source="." manage.py test --settings=project.settings.ci_testing
     - coverage xml
+  after_script:
+    - cp /app/testreport.xml ${CI_PROJECT_DIR}/junit-report.xml
   artifacts:
     reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
+      junit: junit-report.xml
   only:
     - branches
 
