@@ -1,7 +1,7 @@
 from .common import *
 
 MEDIA_ROOT = "/appdata/media/"
-STATIC_ROOT = "/appdata/static/"
+STATIC_ROOT = "/tmp/staticroot/"
 
 DEBUG = False
 SECRET_KEY = os.environ["SECRET_KEY"]

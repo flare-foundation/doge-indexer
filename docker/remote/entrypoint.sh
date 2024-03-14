@@ -10,4 +10,13 @@ done
 python manage.py collectstatic --no-input --settings=${DJANGO_SETTINGS_MODULE}
 python manage.py migrate --settings=${DJANGO_SETTINGS_MODULE}
 
-exec uwsgi --chdir=/app --module=project.wsgi:application --env DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} --master --protocol=uwsgi --socket=0.0.0.0:3030 --enable-threads --processes=2
+exec uwsgi \
+	--chdir /app \
+	--module project.wsgi:application \
+	--env DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
+	--master \
+	--enable-threads \
+	--processes 2 \
+	--http 0.0.0.0:8400 \
+	--http-processes 2 \
+	--static-map /static=/tmp/staticroot
