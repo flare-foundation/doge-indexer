@@ -28,29 +28,33 @@ class Command(BaseCommand):
 
             cutoff = now_ts - config.PRUNE_KEEP_DAYS * 24 * 60 * 60
 
-            logger.info("Pruning at: %s", now_ts, " all transactions and block before cutoff: %s", cutoff)
+            logger.info(f"Pruning at: {now_ts} all transactions and block before cutoff: {cutoff}")
 
-            with transaction.atomic():
-                # objects with fk to transaction first
-                TransactionInput.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
-                TransactionInputCoinbase.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
-                TransactionOutput.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
+            latest_block = DogeBlock.objects.order_by("block_number").last()
+            if latest_block is None or latest_block.timestamp <= cutoff:
+                logger.info("Not pruning when the latest block height is older than PRUNE_KEEP_DAYS (%s days)", config.PRUNE_KEEP_DAYS)
+            else:
+                with transaction.atomic():
+                    # objects with fk to transaction first
+                    TransactionInput.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
+                    TransactionInputCoinbase.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
+                    TransactionOutput.objects.filter(transaction_link__timestamp__lt=cutoff).delete()
 
-                # then others
-                DogeBlock.objects.filter(timestamp__lt=cutoff).delete()
-                DogeTransaction.objects.filter(timestamp__lt=cutoff).delete()
+                    # then others
+                    DogeBlock.objects.filter(timestamp__lt=cutoff).delete()
+                    DogeTransaction.objects.filter(timestamp__lt=cutoff).delete()
 
-                bottom_block = DogeBlock.objects.order_by("block_number").first()
-                bottom_block_transaction = DogeTransaction.objects.order_by("block_number").first()
+                    bottom_block = DogeBlock.objects.order_by("block_number").first()
+                    bottom_block_transaction = DogeTransaction.objects.order_by("block_number").first()
 
-                if bottom_block is not None and bottom_block_transaction is not None:
-                    if bottom_block.block_number != bottom_block_transaction.block_number:
-                        raise Exception("Bottom block and bottom transaction block number mismatch while pruning")
+                    if bottom_block is not None and bottom_block_transaction is not None:
+                        if bottom_block.block_number != bottom_block_transaction.block_number:
+                            raise Exception("Bottom block and bottom transaction block number mismatch while pruning")
 
-                    prune_state.latest_indexed_tail_height = bottom_block.block_number
-                    prune_state.timestamp = now_ts
-                    prune_state.save()
+                        prune_state.latest_indexed_tail_height = bottom_block.block_number
+                        prune_state.timestamp = now_ts
+                        prune_state.save()
 
-            logger.info("Sleeping for %s sec", config.PRUNE_INTERVAL_SECONDS)
+                logger.info("Prune finished, sleeping for %s sec", config.PRUNE_INTERVAL_SECONDS)
 
             time.sleep(config.PRUNE_INTERVAL_SECONDS)

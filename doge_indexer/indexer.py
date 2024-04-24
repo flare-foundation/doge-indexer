@@ -83,6 +83,13 @@ class DogeIndexerClient:
         """
         latest_block = DogeBlock.objects.order_by("block_number").last()
         if latest_block is None:
+            height = self._get_current_block_height(self.toplevel_worker)
+
+            safety_factor = 1.5
+
+            blocks_since_pruning = int(config.PRUNE_KEEP_DAYS * 24 * 60 * safety_factor)
+            if config.INITIAL_BLOCK_HEIGHT < height - blocks_since_pruning:
+                return height - blocks_since_pruning
             return config.INITIAL_BLOCK_HEIGHT
 
         if latest_block.block_number < config.INITIAL_BLOCK_HEIGHT:
