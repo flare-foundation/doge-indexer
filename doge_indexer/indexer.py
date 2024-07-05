@@ -119,7 +119,9 @@ class DogeIndexerClient:
 
                 # TODO save all blocks up to tip height
             else:
-                logger.info("No new blocks to process, sleeping for %s seconds", config.INDEXER_POLL_INTERVAL)
+                logger.info(
+                    f"No new blocks to process, indexed/latest: {self.latest_indexed_block_height}/{height} sleeping for {config.INDEXER_POLL_INTERVAL} seconds"
+                )
                 self.update_tip_state_idle()
                 time.sleep(config.INDEXER_POLL_INTERVAL)
 

@@ -1,10 +1,23 @@
-import re
+import string
 from enum import Enum
 
 
+def un_prefix_0x(to_unprefixed: str) -> str:
+    if len(to_unprefixed) >= 2:
+        if to_unprefixed[:2] == "0x":
+            return to_unprefixed[2:]
+    return to_unprefixed
+
+
 def is_valid_bytes_32_hex(maybe_hex_string: str):
-    byte_32_hex_pattern = r"/^(0x|0X)?[0-9a-fA-F]{64}$/"
-    return re.match(byte_32_hex_pattern, maybe_hex_string)
+    maybe_hex_string = un_prefix_0x(maybe_hex_string)
+    return all(c in string.hexdigits for c in maybe_hex_string)
+    # byte_32_hex_pattern = r"/^(0x|0X)?[0-9a-fA-F]{64}$/"
+    # prog = re.compile(byte_32_hex_pattern)
+    # print(maybe_hex_string)
+    # print(type(maybe_hex_string))
+    # print(prog.match(maybe_hex_string))
+    # return prog.match(maybe_hex_string)
 
 
 class WordToOpcode(Enum):

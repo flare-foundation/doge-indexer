@@ -32,7 +32,10 @@ class Command(BaseCommand):
 
             latest_block = DogeBlock.objects.order_by("block_number").last()
             if latest_block is None or latest_block.timestamp <= cutoff:
-                logger.info("Not pruning when the latest block height is older than PRUNE_KEEP_DAYS (%s days)", config.PRUNE_KEEP_DAYS)
+                logger.info(
+                    "Not pruning when the latest block height is older than PRUNE_KEEP_DAYS (%s days)",
+                    config.PRUNE_KEEP_DAYS,
+                )
             else:
                 with transaction.atomic():
                     # objects with fk to transaction first
