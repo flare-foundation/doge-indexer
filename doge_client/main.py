@@ -12,7 +12,7 @@ class DogeClient:
         self.url = config.NODE_RPC_URL
 
     def _post(self, session: Session, json=None):
-        return session.post(self.url, json=json)
+        return session.post(self.url, json=json, timeout=20)
 
     def get_transaction(self, session: Session, txid: str):
         return self._post(
