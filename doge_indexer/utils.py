@@ -11,7 +11,7 @@ def un_prefix_0x(to_unprefixed: str) -> str:
 
 def is_valid_bytes_32_hex(maybe_hex_string: str):
     maybe_hex_string = un_prefix_0x(maybe_hex_string)
-    return all(c in string.hexdigits for c in maybe_hex_string)
+    return len(maybe_hex_string) == 64 and all(c in string.hexdigits for c in maybe_hex_string)
     # byte_32_hex_pattern = r"/^(0x|0X)?[0-9a-fA-F]{64}$/"
     # prog = re.compile(byte_32_hex_pattern)
     # print(maybe_hex_string)
